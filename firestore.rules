@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /notes/{noteId} {
+      function signedIn() {
+        return request.auth != null;
+      }
+
+      function ownsExistingNote() {
+        return signedIn() && resource.data.ownerUserId == request.auth.uid;
+      }
+
+      allow read: if ownsExistingNote();
+      allow create: if signedIn()
+        && request.resource.data.ownerUserId == request.auth.uid;
+      allow update: if ownsExistingNote()
+        && request.resource.data.ownerUserId == request.auth.uid;
+      allow delete: if ownsExistingNote();
+    }
+  }
+}
